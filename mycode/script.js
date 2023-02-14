@@ -1,12 +1,14 @@
 'use strict';
 
-///////////////////////////////////////
-// Modal window
-
 const modal = document.querySelector('.modal');
 const overlay = document.querySelector('.overlay');
 const btnCloseModal = document.querySelector('.btn--close-modal');
 const btnsOpenModal = document.querySelectorAll('.btn--show-modal');
+const btnScrollTo = document.querySelector('.btn--scroll-to');
+const section1 = document.querySelector('#section--1');
+
+///////////////////////////////////////
+// Modal window
 
 const openModal = function (e) {
   e.preventDefault(); //prevent page from jumping page back to top
@@ -32,3 +34,380 @@ document.addEventListener('keydown', function (e) {
     closeModal();
   }
 });
+
+///////////////////////////////////////////////////////////
+//IMPLEMENTING SMOOTH SCROLLING (Learn more button)
+
+btnScrollTo.addEventListener('click', function (e) {
+  const s1coords = section1.getBoundingClientRect();
+  section1.scrollIntoView({ behavior: 'smooth' });
+});
+
+//////////////////////////////////////////////////////////////
+//Page navigation (Event Deligation)
+
+//first, add the event listener to a common parent element
+//second, determine what element originated the event
+document.querySelector('.nav__links').addEventListener('click', function (e) {
+  //console.log(e.target); //use info to find which element event occured at
+  e.preventDefault();
+
+  //Matching strategy
+  if (e.target.classList.contains('nav__link')) {
+    //console.log('LINK');
+    const id = e.target.getAttribute('href'); //want the HTML written for href
+    console.log(id);
+    document.querySelector(id).scrollIntoView({ behavior: 'smooth' });
+  }
+});
+
+///////////////////////////////////////////////////////////////////
+//Tabbed component
+const tabs = document.querySelectorAll('.operations__tab');
+const tabsContainer = document.querySelector('.operations__tab-container');
+const tabsContent = document.querySelectorAll('.operations__content');
+
+//tabs.forEach(t => t.addEventListener('click', () => console.log('TAB')));
+//EVENT DELIGATION
+tabsContainer.addEventListener('click', function (e) {
+  //matching strategy
+  //need to get btn when click on span or btn
+  const clicked = e.target.closest('.operations__tab'); //find btn itself
+  console.log(clicked);
+  //ignore clicks where result of closest is null
+  //GUARD CLAUSE
+  if (!clicked) return; //rest of code not executed
+
+  tabs.forEach(t => t.classList.remove('operations__tab--active'));
+  //remove class for higher tab on all of the tabs
+  clicked.classList.add('operations__tab--active');
+  //add class for higher tab on the one clicked
+
+  //Activate content
+  document
+    .querySelector(`.operations__content--${clicked.dataset.tab}`)
+    .classList.add('operations__content--active');
+});
+
+/*
+//////////////////////////////////////////////////////////////////
+//SELECTING, CREATING, & DELETING ELEMENTS
+
+console.log(document.documentElement);
+console.log(document.head);
+console.log(document.body);
+
+//make sure to use selector (. or #) with these
+const header = document.querySelector('.header');
+const allSections = document.querySelectorAll('.section');
+console.log(allSections);
+
+document.getElementById('section--1');
+
+//HTML collection (live updates with changes) --> does not happen with a node list
+const allButtons = document.getElementsByTagName('button');
+console.log(allButtons);
+console.log(document.getElementsByClassName('btn'));
+
+//Creating and inserting elements
+// .insertAdjacentHTML
+//(used to create movements in Bankist app, quick and easy way to create elements)
+const message = document.createElement('div');
+//creates DOM element & stores it in 'message' variable
+//variable = object that represents the DOM element
+//(not in the DOM yet, able to manipulate it though)
+//-->must manually insert it to the page
+message.classList.add('cookie-message'); //add class to the div for message
+//message.textContent = 'We use cookies for improved functionality and analytics';
+//insert txt
+message.innerHTML =
+  'We use cookies for improved functionality and analytics. <button class="btn btn--close--cookie">Got it!</button>'; //add txt and html
+
+//add this element to the DOM
+//header.prepend(message);
+//prepend adds the element as the first child of the element selected(header)
+header.append(message);
+//append adds the element as the last child of the element selected(header)
+//can only be in one place at a time
+
+//want to add an element in multiple places
+//copy the first element
+//header.append(message.cloneNode(true)); //true=all child elements copied as well
+
+//header.before(message); //insert before header as a sibling
+//header.after(message); //insert after header as a sibling
+
+//Delete elements
+//remove message when click on button
+document
+  .querySelector('.btn--close--cookie')
+  .addEventListener('click', function () {
+    message.remove();
+    //use to:
+    //message.parentElement.removeChild(message);
+  });
+
+//////////////////////////////////////////////////////////////////////
+//STYLES, ATTRIBUTES, & CLASSES
+
+//Styles
+message.style.backgroundColor = '#37383d';
+message.style.width = '120%';
+//can not use the style property to view in the console
+console.log(message.style.color); //hidden inside a class = nothing
+console.log(message.style.backgroundColor); //manually set in line = can read
+//use getComputedStyle function to see hidden styles
+//console.log(getComputedStyle(message));//contains all properties
+console.log(getComputedStyle(message).color);
+console.log(getComputedStyle(message).height);
+
+//change height directly
+//(use number and parsefloat to change the string to a number, set to base 10)
+message.style.height =
+  Number.parseFloat(getComputedStyle(message).height, 10) + 30 + 'px';
+
+//CSS custome properties (CSS variables)
+//document.documentElement.style.setProperty('--color-primary', 'orangered');
+
+//Attributes
+//(src, class, id, alt, href, etc)
+const logo = document.querySelector('.nav__logo');
+console.log(logo.className); //nav__logo
+
+//change alt text
+logo.alt = 'Beautiful minimalist logo';
+
+//not a standard property for the element = undefined even if there
+console.log(logo.designer);
+//Non-standard way to retrieve value
+console.log(logo.getAttribute('designer'));
+
+//create & set an attribute
+logo.setAttribute('company', 'Bankist');
+
+//absolute version and then the relative version
+console.log(logo.src);
+console.log(logo.getAttribute('src'));
+//same with href
+const link = document.querySelector('.nav__link--btn');
+console.log(link.href);
+console.log(link.getAttribute.href); //undefined (can be #)
+
+//Data Attribute
+console.log(logo.dataset.versionNumber);
+//use alot with UI (user interface)
+
+//Classes
+//can add multiple classes separated by comas
+logo.classList.add('c', 'j');
+logo.classList.remove('c', 'j');
+logo.classList.toggle('c');
+logo.classList.contains('c'); //like 'includes' in arrays
+//don't use this
+//(it will override all existing classes & only lets one class be put on an element)
+//logo.className = 'jonas';
+
+
+//IMPLEMENTING SMOOTH SCROLLING
+const btnScrollTo = document.querySelector('.btn--scroll-to');
+const section1 = document.querySelector('#section--1');
+
+btnScrollTo.addEventListener('click', function (e) {
+  const s1coords = section1.getBoundingClientRect();
+  //console.log(s1coords); //DOMRect(properties)
+  //x = 0 = don't want horizontal scroll
+
+  //console.log(e.target.getBoundingClientRect()); //for the button clicked
+  //gives properties values realative to current viewport
+
+  //console.log('Current scroll (X/Y)', window.pageXOffset, window.pageYOffset);
+
+  //console.log(
+  //  'height/width of viewport',
+  //  document.documentElement.clientHeight,
+  //  document.documentElement.clientWidth
+  //);
+
+  //Scrolling (first argument = x/from left, 2nd argument = y/from top)
+  //window.scrollTo(
+  //  s1coords.left + window.pageXOffset,
+  //  s1coords.top + window.pageYOffset
+  //);
+  //add window X/Y offset so no matter where scrolled to the click will scroll right
+  //makes it relative to the whole page not just the viewport
+
+  //to make scroll smooth, use an object with top, left, & behavior properties
+  //window.scrollTo({
+  //  left: s1coords.left + window.pageXOffset,
+  //  top: s1coords.top + window.pageYOffset,
+  //  behavior: 'smooth',
+  //});
+
+  //new way (for most modern browsers only)
+  section1.scrollIntoView({ behavior: 'smooth' });
+});
+//need coordinates to scroll to the first section
+*/
+
+/*
+//////////////////////////////////////////////////////////////////////
+//TYPE OF EVENTS & EVENT HANDLERS
+//event = signal generated by a certain DOM node
+//signal = something has happened (click, mouse move, key stroke, etc.)
+
+//new-school way:
+//mouse enter event
+const h1 = document.querySelector('h1');
+
+const alertH1 = function (e) {
+  alert('addEventListener: Great! You are reading the heading :D');
+
+  //h1.removeEventListener('mouseenter', alertH1);
+  //now event listening only happens once
+};
+
+//event listening for, function with an (event)
+h1.addEventListener('mouseenter', alertH1);
+//**allows us to add multiple event listeners to the same event
+
+//can also remove an event listener if we don't need it anymore
+//need function to be in a named function in order to do this
+//can remove the event listener outside the function
+//for example set a timer for when the event listener will end
+setTimeout(() => h1.removeEventListener('mouseenter', alertH1), 5000);
+
+//old-school way:
+//another way to attach an event listener to an element
+//on-evnet property directly on the element
+//set equal to function (e) {}
+//h1.onmouseenter = function (e) {
+//  alert('onmouseenter: Great! You are reading the heading :D');
+//}; //can only do on event
+*/
+
+//DO NOT USE
+//HTML attribute way of handeling events
+//in HTML document
+/*
+<div class="header__title">
+**    <h1 onclick="alert('HTML alert')">    **
+        When
+        <!-- Green highlight effect -->
+        <span class="highlight">banking</span>
+*/
+
+/*
+/////////////////////////////////////////////////////////////////
+//EVENT PROPAGATION: BUBBLING AND CAPTURING
+// create random color generator with # between 0-255 --> rbg(255,255,255)
+const randomInt = (min, max) =>
+  Math.floor(Math.random() * (max - min + 1) + min);
+const randomColor = () =>
+  `rgb(${randomInt(0, 255)},${randomInt(0, 255)},${randomInt(0, 255)})`;
+//console.log(randomColor(0,255));
+//attach event handler to 'Features' in the navigation & the parent elements as well
+//listen for event in bubbling phase
+document.querySelector('.nav__link').addEventListener('click', function (e) {
+  //console.log('LINK');
+  this.style.backgroundColor = randomColor(); //have to change href = # in HTML to work
+  console.log('LINK', e.target, e.currentTarget);
+  //event target = where the click (event) happened
+  //current target = element on which the event handler is attached
+  console.log(e.currentTarget === this);
+
+  //Stop event propagation
+  //not usually used (can help in bug fixes)
+  //e.stopPropagation();//doesn't go anyfurther (event never gets to parents elements)
+});
+//listen for event in bubbling phase
+document.querySelector('.nav__links').addEventListener('click', function (e) {
+  //console.log('LINK');
+  this.style.backgroundColor = randomColor();
+  console.log('CONTAINER', e.target, e.currentTarget);
+});
+document.querySelector('.nav').addEventListener(
+  'click',
+  function (e) {
+    //console.log('LINK');
+    this.style.backgroundColor = randomColor();
+    console.log('NAV', e.target, e.currentTarget);
+  }
+  //true //listen for event in capturing phase
+);
+
+
+////////////////////////////////////////////////////////////////////////
+//EVENT DELEGATION: IMPLEMENTING PAGE NAVIGATION
+//smooth scroll for navigation links
+
+//without event delegation
+//queryselectorall returns a node list
+//use for each method to attach event handler to each elements in node list
+document.querySelectorAll('.nav__link').forEach(function (el) {
+  el.addEventListener('click', function (e) {
+    e.preventDefault(); //stop from using href scroll = jump to section
+    //console.log('LINK');
+    const id = this.getAttribute('href'); //want the HTML written for href
+    console.log(id);
+    document.querySelector(id).scrollIntoView({ behavior: 'smooth' });
+  });
+}); //with too many elements this will effect performance
+
+
+///////////////////////////////////////////////////////////////////////
+//DOM TRAVERSING
+
+const h1 = document.querySelector('h1');
+
+//Going downwards: child(ren)
+console.log(h1.querySelectorAll('.highlight'));
+//children of the h1 element (works no matter how deep those child elements are)
+//only gets class highlight of children of h1 (not of other elements)
+console.log(h1.childNodes);
+//direct child nodes of h1 only
+console.log(h1.children);
+//HTML collection (live updated)
+//direct children only
+h1.firstElementChild.style.color = 'white'; //first child changes to white
+h1.lastElementChild.style.color = 'orangered'; //last child changes to orangered
+
+//Going upwards: parent(s)
+console.log(h1.parentNode);
+//direct parent nodes of h1 only
+console.log(h1.parentElement);
+//direct parent element
+
+//find parent no matter how far away
+h1.closest('.header').style.background = 'var(--gradient-secondary)';
+//closest parent element that has this class and apply a style to it
+
+h1.closest('h1').style.background = 'var(--gradient-primary)';
+//returns the h1 element itself
+
+//both querySelectors and closest accept a query string
+//querySelectors look for children (down the DOM)
+//closest looks for parents (up the DOM)
+
+//Going sideways: siblings
+//can only access direct siblings (previous or next)
+console.log(h1.previousElementSibling); //null = none before
+console.log(h1.nextElementSibling); //h4
+
+//usually don't use
+console.log(h1.previousSibling);
+console.log(h1.nextSibling);
+
+//if we really need all the siblings
+//Trick: move up to the parent element and then read all the children from there
+console.log(h1.parentElement.children);
+//all siblings including self
+
+//create array from the HTML collection
+[...h1.parentElement.children].forEach(function (el) {
+  if (el !== h1) el.style.transform = 'scale(0.5)';
+});
+//for all siblings not the h1 style transform to 50% smaller
+*/
+
+//////////////////////////////////////////////////////////////////
+//BUILDING A TABBED COMPONENT
