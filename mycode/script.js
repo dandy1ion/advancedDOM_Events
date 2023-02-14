@@ -6,6 +6,10 @@ const btnCloseModal = document.querySelector('.btn--close-modal');
 const btnsOpenModal = document.querySelectorAll('.btn--show-modal');
 const btnScrollTo = document.querySelector('.btn--scroll-to');
 const section1 = document.querySelector('#section--1');
+const nav = document.querySelector('.nav');
+const tabs = document.querySelectorAll('.operations__tab');
+const tabsContainer = document.querySelector('.operations__tab-container');
+const tabsContent = document.querySelectorAll('.operations__content');
 
 ///////////////////////////////////////
 // Modal window
@@ -63,9 +67,6 @@ document.querySelector('.nav__links').addEventListener('click', function (e) {
 
 ///////////////////////////////////////////////////////////////////
 //Tabbed component
-const tabs = document.querySelectorAll('.operations__tab');
-const tabsContainer = document.querySelector('.operations__tab-container');
-const tabsContent = document.querySelectorAll('.operations__content');
 
 //tabs.forEach(t => t.addEventListener('click', () => console.log('TAB')));
 //EVENT DELIGATION
@@ -73,21 +74,142 @@ tabsContainer.addEventListener('click', function (e) {
   //matching strategy
   //need to get btn when click on span or btn
   const clicked = e.target.closest('.operations__tab'); //find btn itself
-  console.log(clicked);
+  //console.log(clicked);
   //ignore clicks where result of closest is null
   //GUARD CLAUSE
   if (!clicked) return; //rest of code not executed
 
+  //Remove active classes
   tabs.forEach(t => t.classList.remove('operations__tab--active'));
-  //remove class for higher tab on all of the tabs
+  tabsContent.forEach(c => c.classList.remove('operations__content--active'));
+
+  //Activate tab
   clicked.classList.add('operations__tab--active');
-  //add class for higher tab on the one clicked
 
   //Activate content
+  //console.log(clicked.dataset.tab);
   document
     .querySelector(`.operations__content--${clicked.dataset.tab}`)
     .classList.add('operations__content--active');
 });
+
+//////////////////////////////////////////////////////////////////
+//PASSING ARGUMENTS TO EVENT HANDLERS
+//MENU FADE ANIMATION (HOVERING OVER LINKS FOR FOCUS)
+
+const handelHover = function (e) {
+  //console.log(this, e.currentTarget);
+  if (e.target.classList.contains('nav__link')) {
+    const link = e.target; //create variable containing element we are working with
+    const siblings = link.closest('.nav').querySelectorAll('.nav__link');
+    const logo = link.closest('.nav').querySelector('img');
+
+    //change opacity of siblings
+    siblings.forEach(el => {
+      if (el !== link) el.style.opacity = this; //this is now our opacity
+    });
+    logo.style.opacity = this; //this is now our opacity
+  }
+};
+//Original:
+//nav.addEventListener('mouseover', function (e) {
+//  if (e.target.classList.contains('nav__link')) {
+//    const link = e.target; //create variable containing element we are working with
+//    const siblings = link.closest('.nav').querySelectorAll('.nav__link');
+//    const logo = link.closest('.nav').querySelector('img');
+//
+//    //change opacity of siblings
+//    siblings.forEach(el => {
+//      if (el !== link) el.style.opacity = 0.5; //1 for mouseout
+//    });
+//    logo.style.opacity = 0.5; //1 for mouseout
+//  }
+//});
+
+//anonymous callback function with function:
+//nav.addEventListener('mouseover', function (e) {
+//  handelHover(e, 0.5);
+//});
+//nav.addEventListener('mouseout', function (e) {
+//  handelHover(e, 1);
+//});
+
+//Bind method:(creates copy of function called on)
+//entire navigation as the container = nav
+nav.addEventListener('mouseover', handelHover.bind(0.5));
+
+//bring back original settings
+nav.addEventListener('mouseout', handelHover.bind(1));
+
+//////////////////////////////////////////////////////////////
+//IMPLEMENTING A STICKY NAVIGATION: THE SCROLL EVENT
+//scroll = not very efficient (especially on older mobile) and should be avoided
+//const initialCoords = section1.getBoundingClientRect();
+//console.log(initialCoords);
+//window.addEventListener('scroll', function (e) {
+//console.log(e);
+//console.log(window.scrollY);
+//calculate position dynamically to start sticky
+//if (window.scrollY > initialCoords.top) nav.classList.add('sticky');
+//else nav.classList.remove('sticky');
+//});
+
+//////////////////////////////////////////////////////////////////
+//A BETTER WAY: THE INTERSECTION OBSERVER API
+//this API allows our code to observe changes to the way that...
+//a certain target element intersects another element,
+//or the way it intersects the viewport
+
+//callback function
+//two arguments: enteries, observer object itself
+//if threshold is an array then entries is an array of the threshold enteries
+//const obsCallback = function (entries, observer) {
+//  enteries.forEach(entry => {
+//    //console.log(entry);//look at intersectionRatio & isintersecting
+//  });
+//};
+
+//options
+//const obsOptions = {
+//  root: null, //the element that the target is intersecting
+//  //null gives you the whole viewport
+//  //threshold: 0.1, //percentage of intersectiong at which callback called
+//  threshold: [0, 0.2], //can be an array
+//};
+
+//pass in callback function and an object of options
+//can store in variables or write directly in
+//const observer = new IntersectionObserver(obsCallback, obsOptions);
+//observe method with target element passed in
+//observer.observe(section1);
+
+//////////////////////////
+//observe header element
+const header = document.querySelector('.header');
+const navHeight = nav.getBoundingClientRect().height;
+//console.log(navHeight);
+
+const stickyNav = function (entries) {
+  const [entry] = entries;
+  //console.log(entry);//isIntersecting property
+  //if it's not intersecting then add sticky class
+  if (!entry.isIntersecting) nav.classList.add('sticky');
+  //if it's intersecting then remove sticky class
+  else nav.classList.remove('sticky');
+};
+
+const headerObserver = new IntersectionObserver(stickyNav, {
+  root: null,
+  threshold: 0, //when 0% of header visable
+  //rootMargin: '-90px', //box of pixels applied outside target element
+  //sticky nav will appear 90px before section1 disapears
+  rootMargin: `-${navHeight}px`, //create dynamically for each screen
+});
+headerObserver.observe(header);
+
+//////////////////////////////////////////////////////
+///////////////////////////////////////
+///////////////////////
 
 /*
 //////////////////////////////////////////////////////////////////
@@ -410,4 +532,5 @@ console.log(h1.parentElement.children);
 */
 
 //////////////////////////////////////////////////////////////////
-//BUILDING A TABBED COMPONENT
+//PASSING ARGUMENTS TO EVENT HANDLERS
+//HOVERING OVER LINKS FOR FOCUS
