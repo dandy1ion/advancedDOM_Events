@@ -719,4 +719,36 @@ console.log(h1.parentElement.children);
 */
 
 //////////////////////////////////////////////////////////////////
-//REVEALING ELEMENTS ON SCROLL
+//LIFECYCLE DOM EVENTS
+
+//DOM content loaded:
+//event fired by the document as soon as the HTML is completly parsed
+//(HTML has been downloaded & converted to the DOM tree)
+//also all scripts must be downloaded and executed before this
+//does not wait for images or other external content to be loaded
+document.addEventListener('DOMContentLoaded', function (e) {
+  console.log('HTML parsed and DOM tree built!', e);
+});
+//script tag in HTML is at the very end of the body after all of HTML is parsed
+
+//wrap all code in document ready function (JQuery):
+//document.ready //not needed in regualr JavaScript
+
+//Load event:
+//fired by the window as soon as the HTML is parsed and
+//all the images and external resources (like CSS files) are loaded
+//complete page finished
+window.addEventListener('load', function (e) {
+  console.log('Page fully loaded', e);
+});
+
+//Before unload event (DO NOT ABUSE)
+//created immediately before a user is about to leave a page (click x button)
+//window.addEventListener('beforeunload', function (e) {
+//  e.preventDefault(); //some browsers require we do this
+//  console.log(e);
+//  e.returnValue = ''; //need this to get pop up to confirm desire to leave site
+//});//use to prevent unwanted data loss for user
+
+////////////////////////////////////////////////////////////////
+//EFFICIENT SCRIPT LOADING: DEFER AND ASYNC
