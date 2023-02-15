@@ -125,7 +125,6 @@ const handelHover = function (e) {
 //    logo.style.opacity = 0.5; //1 for mouseout
 //  }
 //});
-
 //anonymous callback function with function:
 //nav.addEventListener('mouseover', function (e) {
 //  handelHover(e, 0.5);
@@ -133,7 +132,6 @@ const handelHover = function (e) {
 //nav.addEventListener('mouseout', function (e) {
 //  handelHover(e, 1);
 //});
-
 //Bind method:(creates copy of function called on)
 //entire navigation as the container = nav
 nav.addEventListener('mouseover', handelHover.bind(0.5));
@@ -206,6 +204,195 @@ const headerObserver = new IntersectionObserver(stickyNav, {
   rootMargin: `-${navHeight}px`, //create dynamically for each screen
 });
 headerObserver.observe(header);
+
+/////////////////////////////////////////////////////////
+//REVEALING ELEMENTS ON SCROLL
+
+//Reveal sections
+//remove section--hidden class to reveal as you scroll
+const allSections = document.querySelectorAll('.section');
+
+const revealSection = function (entries, observer) {
+  //get entry from entries with destructuring
+  const [entry] = entries;
+  //console.log(entry); //interested in target (id)
+  //which section intersected the viewport
+  //Gaurd Clause(if not intersecting exit code)
+  if (!entry.isIntersecting) return;
+  //if intersecting:
+  entry.target.classList.remove('section--hidden');
+  //stop observing
+  observer.unobserve(entry.target);
+};
+
+const sectionObserver = new IntersectionObserver(revealSection, {
+  root: null, //veiwport
+  threshold: 0.15, //section revealed when 15% visable
+});
+allSections.forEach(function (section) {
+  sectionObserver.observe(section);
+  //add class 'section--hidden' to hide the sections
+  section.classList.add('section--hidden');
+});
+
+////////////////////////////////////////////////////////////
+//LAZING LOADING IMAGES(great for performance)
+
+//low-resolution very small img loaded first = src (standard attribute)
+//high-resolution img loaded = data-src (special data attribute)
+//remove class 'lazy-img' = blur filter hiding low-resolution photo
+
+//select imgs with data-src property
+const imgTargets = document.querySelectorAll('img[data-src]');
+//console.log(imgTargets);
+
+const loadImg = function (entries, observer) {
+  const [entry] = entries;
+  //console.log(entry);
+
+  //Gaurd Clause
+  if (!entry.isIntersecting) return;
+
+  //Replace src with data-src
+  entry.target.src = entry.target.dataset.src;
+  //use network tab in inspector to change speed:
+  //to see how others might observe the load of your page/images
+
+  //listen for load event(data-src img loaded)
+  entry.target.addEventListener('load', function () {
+    entry.target.classList.remove('lazy-img');
+  });
+  //stop observing
+  observer.unobserve(entry.target);
+};
+
+const imgObserver = new IntersectionObserver(loadImg, {
+  root: null, //viewport
+  threshold: 0, //use 0.5 or greater here if you like seeing the effect
+  //&don't use the rootMargin
+  rootMargin: '200px', //load without user knowing
+});
+
+imgTargets.forEach(img => imgObserver.observe(img));
+
+//////////////////////////////////////////////////////////////////
+//BUILDING A SLIDER COMPONENT
+
+//create function to not pollute the global name space:
+const slider1 = function () {
+  const slides = document.querySelectorAll('.slide');
+  const btnLeft = document.querySelector('.slider__btn--left');
+  const btnRight = document.querySelector('.slider__btn--right');
+  const dotContainer = document.querySelector('.dots');
+
+  let curSlide = 0;
+  //define number of slides so JS knows when to stop slider
+  const maxSlide = slides.length; //node list length
+
+  //easier to see full slider during production:
+  //const slider = document.querySelector('.slider');
+  //slider.style.transform = 'scale(0.4) translateX(-1200px)';
+  //slider.style.overflow = 'visible';
+
+  //FUNCTIONS:
+  const createDots = function () {
+    slides.forEach(function (_, i) {
+      dotContainer.insertAdjacentHTML(
+        'beforeend',
+        `<button class="dots__dot" data-slide="${i}"></button>`
+      ); //i=index (0,2,3.etc)
+    });
+  };
+  //createDots();//put in init function
+
+  const activateDot = function (slide) {
+    //remove all active classes
+    document
+      .querySelectorAll('.dots__dot')
+      .forEach(dot => dot.classList.remove('dots__dot--active'));
+    //add active class to one slide that is active
+    document
+      .querySelector(`.dots__dot[data-slide="${slide}"]`)
+      .classList.add('dots__dot--active');
+  };
+  //activateDot(0);//put in init function
+
+  const goToSlide = function (slide) {
+    slides.forEach(
+      (s, i) => (s.style.transform = `translateX(${100 * (i - slide)}%)`)
+    );
+  };
+  //slides.forEach((s, i) => (s.style.transform = `translateX(${100 * i}%)`));
+  //1st slide 0%, 2nd slide 100%, 3rd slide 200%, 4th slide 300%
+  //goToSlide(0);//put in init function
+
+  const nextSlide = function () {
+    if (curSlide === maxSlide - 1) {
+      //-1 makes it zero based like the node list is
+      curSlide = 0;
+    } else {
+      curSlide++;
+    }
+    goToSlide(curSlide);
+    //activate the dot for that slide
+    activateDot(curSlide);
+  };
+  const prevSlide = function () {
+    if (curSlide === 0) {
+      curSlide = maxSlide - 1;
+    } else {
+      curSlide--;
+    }
+    goToSlide(curSlide);
+    //activate the dot for that slide
+    activateDot(curSlide);
+  };
+  // Go to next slide (active slide at 0%)
+  //btnRight.addEventListener('click', function () {
+  //if (curSlide === maxSlide - 1) {
+  //  //-1 makes it zero based like the node list is
+  //  curSlide = 0;
+  //} else {
+  //  curSlide++;
+  //}
+  //goToSlide(curSlide);
+  //});
+  //curSlide = 1: -100%, 0%, 100%, 200%
+
+  //Initialization function:
+  const init = function () {
+    goToSlide(0);
+    createDots();
+    activateDot(0);
+  };
+  init();
+
+  //EVENT HANDLERS
+  btnRight.addEventListener('click', nextSlide);
+  btnLeft.addEventListener('click', prevSlide);
+
+  //keyboard events
+  document.addEventListener('keydown', function (e) {
+    //console.log(e);//key:'ArrowLeft' & 'ArrowRight'
+    if (e.key === 'ArrowLeft') prevSlide();
+    e.key === 'ArrowRight' && nextSlide(); //short circuiting
+    //either version works
+  });
+
+  //event handler for dots
+  dotContainer.addEventListener('click', function (e) {
+    if (e.target.classList.contains('dots__dot')) {
+      //console.log('DOT');
+      //const slide = e.target.dataset.slide;
+      //use destructuring:
+      const { slide } = e.target.dataset;
+      goToSlide(slide);
+      //activate the dot for that slide
+      activateDot(slide);
+    }
+  });
+};
+slider1();
 
 //////////////////////////////////////////////////////
 ///////////////////////////////////////
@@ -532,5 +719,4 @@ console.log(h1.parentElement.children);
 */
 
 //////////////////////////////////////////////////////////////////
-//PASSING ARGUMENTS TO EVENT HANDLERS
-//HOVERING OVER LINKS FOR FOCUS
+//REVEALING ELEMENTS ON SCROLL
